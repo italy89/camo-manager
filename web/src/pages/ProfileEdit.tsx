@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
   Modal,
   Form,
@@ -9,12 +9,18 @@ import {
   message,
   Divider,
   Space,
+  Timeline,
 } from "antd";
+import {
+  PlayCircleOutlined,
+  PauseCircleOutlined,
+} from "@ant-design/icons";
 import ProxyEditor from "../components/ProxyEditor";
 import type { Profile } from "../api/client";
 import {
   createProfile,
   updateProfile,
+  getProfile,
   parseProxyString,
   buildProxyString,
 } from "../api/client";
@@ -45,6 +51,18 @@ export default function ProfileEdit({
 }: ProfileEditProps) {
   const [form] = Form.useForm();
   const isEdit = !!profile;
+  const [history, setHistory] = useState<Array<{ action: string; timestamp: string }>>([]);
+
+  /* Fetch full profile with history when editing */
+  useEffect(() => {
+    if (!open || !profile) {
+      setHistory([]);
+      return;
+    }
+    getProfile(profile.name)
+      .then((full) => setHistory(full.history ?? []))
+      .catch(() => setHistory([]));
+  }, [open, profile]);
 
   /* Populate form when the modal opens */
   useEffect(() => {
@@ -265,6 +283,40 @@ export default function ProfileEdit({
               {profile.use_count ?? 0}
             </Descriptions.Item>
           </Descriptions>
+
+          {/* -------- History -------- */}
+          {history.length > 0 && (
+            <>
+              <Divider
+                orientation="left"
+                plain
+                style={{ borderColor: "#2a2a40" }}
+              >
+                History ({history.length})
+              </Divider>
+              <div style={{ maxHeight: 200, overflowY: "auto", paddingLeft: 4 }}>
+                <Timeline
+                  items={[...history].reverse().slice(0, 50).map((h) => ({
+                    color: h.action === "opened" ? "#22c55e" : "#6b6b7e",
+                    dot: h.action === "opened" ? (
+                      <PlayCircleOutlined style={{ fontSize: 14 }} />
+                    ) : (
+                      <PauseCircleOutlined style={{ fontSize: 14 }} />
+                    ),
+                    children: (
+                      <span style={{ color: "#8b8b9e", fontSize: 12 }}>
+                        <span style={{ color: h.action === "opened" ? "#22c55e" : "#b0b0c0" }}>
+                          {h.action === "opened" ? "Started" : "Stopped"}
+                        </span>
+                        {" — "}
+                        {new Date(h.timestamp).toLocaleString()}
+                      </span>
+                    ),
+                  }))}
+                />
+              </div>
+            </>
+          )}
         </>
       )}
     </Modal>
