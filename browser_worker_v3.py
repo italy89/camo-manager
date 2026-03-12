@@ -36,6 +36,19 @@ def main():
         'geoip': geoip,
         'screen': BFScreen(min_width=vw, max_width=vw, min_height=vh, max_height=vh),
         'viewport': viewport,
+        'enable_cache': True,
+        'firefox_user_prefs': {
+            # Enable back/forward navigation and session history
+            'browser.sessionhistory.max_entries': 50,
+            'browser.sessionhistory.max_total_viewers': -1,
+            # Enable bookmarks
+            'browser.bookmarks.restore_default_bookmarks': False,
+            'browser.toolbars.bookmarks.visibility': 'always',
+            # Keep browsing history
+            'places.history.enabled': True,
+            'privacy.clearOnShutdown.history': False,
+            'privacy.clearOnShutdown_v2.historyFormDataAndDownloads': False,
+        },
     }
 
     if proxy:
